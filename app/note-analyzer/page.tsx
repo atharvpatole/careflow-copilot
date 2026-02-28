@@ -220,12 +220,11 @@ export default function NoteAnalyzerPage() {
 
                             <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center gap-4 py-12">
                                 <div className="bg-indigo-50 p-4 rounded-full">
-                                    <RefreshCw className="h-6 w-6 text-indigo-600" />
+                                    <Brain className="h-6 w-6 text-indigo-600" />
                                 </div>
-                                <h5 className="font-bold text-slate-900">Deterministic Model</h5>
+                                <h5 className="font-bold text-slate-900">Created by Atharv Patole</h5>
                                 <p className="text-sm text-slate-500">
-                                    Parsed via {response.model}<br />
-                                    using Prompt Engineering {response.prompt_version}
+                                    AI-powered clinical reasoning engine
                                 </p>
                             </div>
                         </div>
