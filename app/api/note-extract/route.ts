@@ -34,16 +34,36 @@ export async function POST(req: Request) {
 
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-        const completion = await openai.chat.completions.parse({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: buildSystemPrompt() },
-                { role: "user", content: buildUserPrompt(note) },
-            ],
-            response_format: zodResponseFormat(NoteExtractSchema, "note_extract"),
-            temperature: 0.2,
-            store: false,
-        });
+        // Debug log for property existence in this environment
+        console.log(`[NoteExtract API] SDK Checks: openai.chat=${!!openai.chat}, openai.beta=${!!openai.beta}`);
+
+        // Try both paths commonly used for Structured Outputs in different SDK versions
+        let completion;
+        if ((openai as any).chat?.completions?.parse) {
+            completion = await (openai as any).chat.completions.parse({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: buildSystemPrompt() },
+                    { role: "user", content: buildUserPrompt(note) },
+                ],
+                response_format: zodResponseFormat(NoteExtractSchema, "note_extract"),
+                temperature: 0.2,
+                store: false,
+            });
+        } else if ((openai as any).beta?.chat?.completions?.parse) {
+            completion = await (openai as any).beta.chat.completions.parse({
+                model: "gpt-4o-mini",
+                messages: [
+                    { role: "system", content: buildSystemPrompt() },
+                    { role: "user", content: buildUserPrompt(note) },
+                ],
+                response_format: zodResponseFormat(NoteExtractSchema, "note_extract"),
+                temperature: 0.2,
+                store: false,
+            });
+        } else {
+            throw new Error("OpenAI SDK version does not support structured output '.parse()' helper on either .chat or .beta.chat namespaces. Please check package.json version.");
+        }
 
         const result = completion.choices[0].message.parsed;
         if (!result) {
