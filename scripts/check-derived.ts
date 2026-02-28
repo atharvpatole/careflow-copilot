@@ -47,6 +47,42 @@ function check() {
     console.log(`- Revisit Rate (30d):  ${data.kpis.revisit_rate_30d}`);
     console.log(`- Days in Series:      ${data.series.encounters_by_day.length}`);
     console.log(`- Top Condition:       ${data.top_conditions[0]?.display || 'N/A'}`);
+
+    // Forecast Validation
+    const forecastPath = join(root, 'data/derived/forecast.json');
+    if (!existsSync(forecastPath)) {
+        console.error(`[Error] forecast.json not found at ${forecastPath}`);
+        process.exit(1);
+    }
+
+    const rawForecast = readFileSync(forecastPath, 'utf8');
+    const fData = JSON.parse(rawForecast);
+
+    if (!fData.forecast || !Array.isArray(fData.forecast)) {
+        console.error(`[Fail] forecast is missing or not an array`);
+        process.exit(1);
+    }
+
+    if (fData.forecast.length !== 14) {
+        console.error(`[Fail] Forecast should have exactly 14 rows, got ${fData.forecast.length}`);
+        process.exit(1);
+    }
+
+    let badBounds = 0;
+    fData.forecast.forEach((f: any, i: number) => {
+        if (typeof f.yhat !== 'number' || typeof f.lower !== 'number' || typeof f.upper !== 'number') {
+            console.error(`[Fail] Forecast row ${i} has invalid number types:`, f);
+            process.exit(1);
+        }
+        if (!(f.lower <= f.yhat && f.yhat <= f.upper)) {
+            console.error(`[Fail] Forecast row ${i} violates lower <= yhat <= upper:`, f);
+            badBounds++;
+        }
+    });
+
+    if (badBounds > 0) process.exit(1);
+
+    console.log(`[PASS] forecast.json is valid (14 days generated).`);
 }
 
 check();

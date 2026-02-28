@@ -1,32 +1,204 @@
-[
-  {
-    "name": "Jan",
-    "baseline": 4000,
-    "forecast": 4200
-  },
-  {
-    "name": "Feb",
-    "baseline": 3000,
-    "forecast": 3100
-  },
-  {
-    "name": "Mar",
-    "baseline": 2000,
-    "forecast": 2600
-  },
-  {
-    "name": "Apr",
-    "baseline": 2780,
-    "forecast": 2900
-  },
-  {
-    "name": "May",
-    "baseline": 1890,
-    "forecast": 2100
-  },
-  {
-    "name": "Jun",
-    "baseline": 2390,
-    "forecast": 2500
-  }
-]
+{
+  "generated_at": "2026-02-28T06:03:54.350Z",
+  "method": "weekday-average-std-bounds",
+  "history": [
+    {
+      "date": "2023-02-28",
+      "count": 2
+    },
+    {
+      "date": "2023-03-01",
+      "count": 2
+    },
+    {
+      "date": "2023-03-02",
+      "count": 1
+    },
+    {
+      "date": "2023-03-03",
+      "count": 2
+    },
+    {
+      "date": "2023-03-04",
+      "count": 1
+    },
+    {
+      "date": "2023-03-05",
+      "count": 3
+    },
+    {
+      "date": "2023-03-06",
+      "count": 2
+    },
+    {
+      "date": "2023-03-08",
+      "count": 2
+    },
+    {
+      "date": "2023-03-09",
+      "count": 1
+    },
+    {
+      "date": "2023-03-10",
+      "count": 1
+    },
+    {
+      "date": "2023-03-11",
+      "count": 2
+    },
+    {
+      "date": "2023-03-12",
+      "count": 1
+    },
+    {
+      "date": "2023-03-14",
+      "count": 4
+    },
+    {
+      "date": "2023-03-15",
+      "count": 3
+    },
+    {
+      "date": "2023-03-17",
+      "count": 1
+    },
+    {
+      "date": "2023-03-18",
+      "count": 2
+    },
+    {
+      "date": "2023-03-19",
+      "count": 1
+    },
+    {
+      "date": "2023-03-20",
+      "count": 1
+    },
+    {
+      "date": "2023-03-21",
+      "count": 1
+    },
+    {
+      "date": "2023-03-22",
+      "count": 1
+    },
+    {
+      "date": "2023-03-23",
+      "count": 1
+    },
+    {
+      "date": "2023-03-25",
+      "count": 2
+    },
+    {
+      "date": "2023-03-26",
+      "count": 1
+    },
+    {
+      "date": "2023-03-27",
+      "count": 2
+    },
+    {
+      "date": "2023-03-28",
+      "count": 3
+    },
+    {
+      "date": "2023-03-30",
+      "count": 1
+    },
+    {
+      "date": "2023-04-01",
+      "count": 2
+    },
+    {
+      "date": "2023-04-02",
+      "count": 1
+    }
+  ],
+  "forecast": [
+    {
+      "date": "2023-04-03",
+      "yhat": 2,
+      "lower": 0,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-04",
+      "yhat": 3,
+      "lower": 1,
+      "upper": 4
+    },
+    {
+      "date": "2023-04-05",
+      "yhat": 2,
+      "lower": 1,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-06",
+      "yhat": 1,
+      "lower": 0,
+      "upper": 2
+    },
+    {
+      "date": "2023-04-07",
+      "yhat": 1,
+      "lower": 0,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-08",
+      "yhat": 2,
+      "lower": 1,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-09",
+      "yhat": 1,
+      "lower": 0,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-10",
+      "yhat": 2,
+      "lower": 0,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-11",
+      "yhat": 3,
+      "lower": 1,
+      "upper": 4
+    },
+    {
+      "date": "2023-04-12",
+      "yhat": 2,
+      "lower": 1,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-13",
+      "yhat": 1,
+      "lower": 0,
+      "upper": 2
+    },
+    {
+      "date": "2023-04-14",
+      "yhat": 1,
+      "lower": 0,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-15",
+      "yhat": 2,
+      "lower": 1,
+      "upper": 3
+    },
+    {
+      "date": "2023-04-16",
+      "yhat": 1,
+      "lower": 0,
+      "upper": 3
+    }
+  ]
+}

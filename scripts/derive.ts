@@ -50,6 +50,14 @@ async function main() {
     writeFileSync(metricsPath, JSON.stringify(metrics, null, 2));
     console.log(`[Success] Written derived metrics to ${metricsPath}`);
 
+    // Build Forecast
+    console.log(`[Forecast] Generating 14-day projection...`);
+    const { buildForecast } = await import('../lib/fhir/forecast');
+    const forecastOutput = buildForecast(metrics.series.encounters_by_day);
+    const forecastPath = join(derivedDir, 'forecast.json');
+    writeFileSync(forecastPath, JSON.stringify(forecastOutput, null, 2));
+    console.log(`[Success] Written forecast to ${forecastPath}`);
+
     // Cleanup temporary extraction folder
     if (isZipSource && existsSync(tmpPath)) {
         console.log(`[Cleanup] Removing temporary folder ${tmpPath}...`);
