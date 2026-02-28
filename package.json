@@ -10,7 +10,8 @@
     "derive": "tsx scripts/derive.ts",
     "validate": "tsx scripts/validate.ts",
     "data:build": "tsx scripts/derive.ts",
-    "smoke:ndjson": "tsx scripts/smoke-ndjson.ts"
+    "smoke:ndjson": "tsx scripts/smoke-ndjson.ts",
+    "data:check": "tsx scripts/check-derived.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

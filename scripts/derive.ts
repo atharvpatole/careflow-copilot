@@ -1,26 +1,26 @@
-import { existsSync, readdirSync, rmSync, mkdirSync } from 'fs';
+import { existsSync, readdirSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import extract from 'extract-zip';
+import { buildMetrics } from '../lib/fhir/metrics';
 
 async function main() {
     const rootPath = process.cwd();
     const rawZipPath = join(rootPath, 'data/raw/fhir-100.zip');
     const rawDirPath = join(rootPath, 'data/raw/fhir');
     const tmpPath = join(rootPath, '.tmp/fhir');
+    const derivedDir = join(rootPath, 'data/derived');
 
     let activeSource: string | null = null;
     let isZipSource = false;
 
-    // Check for source
+    // Determine input source: Prefer Zip -> Dir -> Error
     if (existsSync(rawZipPath)) {
         console.log(`[Source] Found zip at ${rawZipPath}`);
-        // Prep tmp folder
         if (existsSync(tmpPath)) {
             rmSync(tmpPath, { recursive: true, force: true });
         }
         mkdirSync(tmpPath, { recursive: true });
 
-        // Unzip
         try {
             console.log(`[Unzip] Extracting to ${tmpPath}...`);
             await extract(rawZipPath, { dir: tmpPath });
@@ -36,50 +36,27 @@ async function main() {
 
     if (!activeSource) {
         console.error('\n[Error] Dataset missing!');
-        console.error('Expected either:');
-        console.error(' - data/raw/fhir-100.zip (will be unzipped to .tmp/fhir)');
-        console.error(' - data/raw/fhir/ (extracted NDJSON files)');
         process.exit(1);
     }
 
-    // Locate ndjson files
-    console.log(`[Process] Scanning ${activeSource} for clinical data...`);
-    const files = readdirSync(activeSource, { recursive: true }) as string[];
+    // Build metrics
+    console.log(`[Metrics] Starting aggregation from ${activeSource}...`);
+    const metrics = await buildMetrics(activeSource);
 
-    const matchedFiles = {
-        Patient: [] as string[],
-        Encounter: [] as string[],
-        Condition: [] as string[]
-    };
+    // Ensure derived dir exists
+    if (!existsSync(derivedDir)) mkdirSync(derivedDir, { recursive: true });
 
-    files.forEach(file => {
-        // filter for ndjson and match resource types
-        if (file.endsWith('.ndjson')) {
-            if (file.includes('Patient')) matchedFiles.Patient.push(file);
-            if (file.includes('Encounter')) matchedFiles.Encounter.push(file);
-            if (file.includes('Condition')) matchedFiles.Condition.push(file);
-        }
-    });
+    const metricsPath = join(derivedDir, 'metrics.json');
+    writeFileSync(metricsPath, JSON.stringify(metrics, null, 2));
+    console.log(`[Success] Written derived metrics to ${metricsPath}`);
 
-    console.log('\n[Summary] Found clinical records:');
-    console.log(` - Patients:   ${matchedFiles.Patient.length} files`);
-    console.log(` - Encounters: ${matchedFiles.Encounter.length} files`);
-    console.log(` - Conditions: ${matchedFiles.Condition.length} files`);
-
-    if (matchedFiles.Patient.length > 0) {
-        console.log('\nFirst few matches:');
-        [...matchedFiles.Patient, ...matchedFiles.Encounter, ...matchedFiles.Condition].slice(0, 5).forEach(f => {
-            console.log(` - ${f}`);
-        });
-    }
-
-    // Cleanup if zip
+    // Cleanup temporary extraction folder
     if (isZipSource && existsSync(tmpPath)) {
-        console.log(`\n[Cleanup] Removing temporary folder ${tmpPath}...`);
+        console.log(`[Cleanup] Removing temporary folder ${tmpPath}...`);
         rmSync(tmpPath, { recursive: true, force: true });
     }
 
-    console.log('\nPipeline step completed successfully.');
+    console.log('\nPipeline completed successfully.');
 }
 
 main().catch(err => {

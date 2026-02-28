@@ -1,0 +1,70 @@
+﻿node.exe : 
+At 
+C:\nvm4w\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS 
+$args
++   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+node:internal/modules/run_mai
+n:122
+    triggerUncaughtException(
+    ^
+Error 
+[ERR_MODULE_NOT_FOUND]: 
+Cannot find module 'C:\Atharv
+\Git\careflow\careflow-copilo
+t\scripts\check-derived.txt' 
+imported from C:\Atharv\Git\c
+areflow\careflow-copilot\
+    at finalizeResolution (no
+de:internal/modules/esm/resol
+ve:275:11)
+    at moduleResolve (node:in
+ternal/modules/esm/resolve:86
+0:10)
+    at defaultResolve (node:i
+nternal/modules/esm/resolve:9
+84:11)
+    at nextResolve (node:inte
+rnal/modules/esm/hooks:748:28
+)
+    at resolveBase (file:///C
+:/Atharv/Git/careflow/careflo
+w-copilot/node_modules/tsx/di
+st/esm/index.mjs?177225828627
+4:2:3744)
+    at async 
+resolveDirectory (file:///C:/
+Atharv/Git/careflow/careflow-
+copilot/node_modules/tsx/dist
+/esm/index.mjs?1772258286274:
+2:4237)
+    at async resolve (file://
+/C:/Atharv/Git/careflow/caref
+low-copilot/node_modules/tsx/
+dist/esm/index.mjs?1772258286
+274:2:5355)
+    at async nextResolve (nod
+e:internal/modules/esm/hooks:
+748:22)
+    at async Hooks.resolve (n
+ode:internal/modules/esm/hook
+s:240:24)
+    at async handleMessage (n
+ode:internal/modules/esm/work
+er:199:18) {
+  code: 
+'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Atharv/Git
+/careflow/careflow-copilot/sc
+ripts/check-derived.txt'
+}
+
+Node.js v22.14.0
