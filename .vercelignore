@@ -1,4 +1,6 @@
 # Exclude raw data from deployment
+data/raw/
+*.zip
 .tmp/*
 
 # Exclude local logs

@@ -37,6 +37,10 @@ async function main() {
     }
 
     if (!activeSource) {
+        if (process.env.VERCEL) {
+            console.log('[Info] Vercel environment detected. Data source omitted from build. Skipping data derivation.');
+            return;
+        }
         console.error('\n[Error] Dataset missing!');
         process.exit(1);
     }
