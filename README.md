@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Careflow Copilot
 
-## Getting Started
+Minimal, clean Next.js App Router application serving as a clinical copilot.
+Includes a dashboard, ML-driven patient volume forecast, and LLM-powered clinical note extraction.
 
-First, run the development server:
+## Dataset
+- **Synthetic Synthea FHIR Bulk Export NDJSON**: Uses a 100 patient dataset.
+- **Raw Data Storage**: The dataset is stored as a ZIP in `data/raw/fhir-100.zip` (always committed as zipped; NOT unzipped in the repo).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How It Works
+- **Build-time Pipeline**: A build-time process (via \`npm run derive\`) unzips and parses the NDJSON to generate \`data/derived/metrics.json\` and \`data/derived/forecast.json\`.
+- **Runtime APIs**: Runtime API routes (\`/api/metrics\`, \`/api/forecast\`) exclusively read from the derived JSON files to ensure high performance and low memory footprints.
+- **LLM Extraction**: The \`/api/note-extract\` endpoint calls OpenAI (or a mock fallback) to perform clinical entity extraction.
+- **Observability**: Production environments emit OTel traces directly to **Braintrust** for monitoring and evaluation.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Install dependencies**:
+   \`\`\`bash
+   npm install
+   \`\`\`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Run derivation pipeline**:
+   Ensure you have the raw data zip in \`data/raw/fhir-100.zip\`.
+   \`\`\`bash
+   npm run derive
+   npm run validate
+   \`\`\`
 
-## Learn More
+3. **Start development server**:
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+   Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
+- **Vercel**: Optimized for Vercel deployment.
+- **Bundle Optimization**: \`.vercelignore\` ensures only derived JSON and app code are deployed, keeping the serverless bundle size minimal.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+- \`/app\`: Next.js pages and API routes.
+- \`/data/raw\`: Source FHIR datasets (zipped).
+- \`/data/derived\`: Computed JSON for runtime.
+- \`/scripts\`: Data processing scripts.
+- \`/lib/fhir\`: NDJSON parsing and transformation logic.
+- \`/lib/llm\`: Schema and prompt management.
+- \`/lib/obs\`: Observability and tracing helpers.
+- \`instrumentation.ts\`: OTel exporter configuration.

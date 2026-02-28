@@ -1,0 +1,14 @@
+# Exclude raw data from deployment
+data/raw/*
+.tmp/*
+
+# Exclude local logs
+*.log
+build.log
+build_utf8.log
+
+# Exclude development files
+.git/
+node_modules/
+.next/
+scripts/

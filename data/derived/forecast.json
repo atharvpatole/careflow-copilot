@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Jan",
+    "baseline": 4000,
+    "forecast": 4200
+  },
+  {
+    "name": "Feb",
+    "baseline": 3000,
+    "forecast": 3100
+  },
+  {
+    "name": "Mar",
+    "baseline": 2000,
+    "forecast": 2600
+  },
+  {
+    "name": "Apr",
+    "baseline": 2780,
+    "forecast": 2900
+  },
+  {
+    "name": "May",
+    "baseline": 1890,
+    "forecast": 2100
+  },
+  {
+    "name": "Jun",
+    "baseline": 2390,
+    "forecast": 2500
+  }
+]
