@@ -23,12 +23,21 @@ import {
     Table as TableIcon,
     ChevronDown,
     ChevronUp,
+    Info,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getEncounterLabel, getEncounterInfo } from "@/lib/fhir/encounter-labels";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
+}
+
+/** Strip FHIR clinical suffixes that confuse non-medical users */
+function cleanConditionDisplay(display: string): string {
+    return display
+        .replace(/\s*\((disorder|finding|situation|procedure|event|morphologic abnormality)\)\s*$/i, '')
+        .trim();
 }
 
 // Types
@@ -61,6 +70,10 @@ export default function DashboardPage() {
     const [classFilterOpen, setClassFilterOpen] = useState(false);
     const [filtersExpanded, setFiltersExpanded] = useState(false);
 
+    // Dataset boundaries
+    const [dataMinDate, setDataMinDate] = useState("");
+    const [dataMaxDate, setDataMaxDate] = useState("");
+
     useEffect(() => {
         async function fetchData() {
             try {
@@ -76,7 +89,11 @@ export default function DashboardPage() {
                 if (jsonData.series.encounters_by_day.length > 0) {
                     const dates = jsonData.series.encounters_by_day.map((d: { date: string }) => d.date);
                     const sortedDates = [...dates].sort();
-                    setEndDate(sortedDates[sortedDates.length - 1]);
+                    const minD = sortedDates[0];
+                    const maxD = sortedDates[sortedDates.length - 1];
+                    setDataMinDate(minD);
+                    setDataMaxDate(maxD);
+                    setEndDate(maxD);
                     const startIndex = Math.max(0, sortedDates.length - 30);
                     setStartDate(sortedDates[startIndex]);
                 }
@@ -103,10 +120,17 @@ export default function DashboardPage() {
 
     const filteredClassSeries = useMemo(() => {
         if (!data) return [];
-        if (selectedClasses.length === 0) return data.breakdowns.encounters_by_class;
-        return data.breakdowns.encounters_by_class.filter((c) =>
-            selectedClasses.includes(c.class)
-        );
+        const source = selectedClasses.length === 0
+            ? data.breakdowns.encounters_by_class
+            : data.breakdowns.encounters_by_class.filter((c) =>
+                selectedClasses.includes(c.class)
+            );
+        // Map raw codes to human-friendly labels for chart display
+        return source.map((c) => ({
+            ...c,
+            label: getEncounterLabel(c.class),
+            info: getEncounterInfo(c.class),
+        }));
     }, [data, selectedClasses]);
 
     const allClassNames = useMemo(() => {
@@ -157,6 +181,12 @@ export default function DashboardPage() {
                     <p className="text-stone-500 mt-1 text-sm md:text-base">
                         Real-time encounter metrics and condition trends.
                     </p>
+                    {dataMinDate && dataMaxDate && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
+                            <Calendar className="h-3 w-3" />
+                            Dataset: {new Date(dataMinDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} – {new Date(dataMaxDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile: Collapsible Filters */}
@@ -188,6 +218,8 @@ export default function DashboardPage() {
                                         <input
                                             type="date"
                                             value={startDate}
+                                            min={dataMinDate}
+                                            max={endDate || dataMaxDate}
                                             onChange={(e) => setStartDate(e.target.value)}
                                             className="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-9 pr-3 py-2.5 text-stone-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         />
@@ -198,6 +230,8 @@ export default function DashboardPage() {
                                         <input
                                             type="date"
                                             value={endDate}
+                                            min={startDate || dataMinDate}
+                                            max={dataMaxDate}
                                             onChange={(e) => setEndDate(e.target.value)}
                                             className="w-full text-sm bg-stone-50 border border-stone-200 rounded-lg pl-9 pr-3 py-2.5 text-stone-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         />
@@ -209,20 +243,23 @@ export default function DashboardPage() {
                             <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
                                 <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider">Encounter Class</label>
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                    {allClassNames.map((cls) => (
-                                        <button
-                                            key={cls}
-                                            onClick={() => toggleClass(cls)}
-                                            className={cn(
-                                                "px-3 py-2 rounded-lg text-sm font-medium transition-all capitalize",
-                                                selectedClasses.includes(cls)
-                                                    ? "bg-blue-100 text-blue-700 border border-blue-200"
-                                                    : "bg-stone-50 text-stone-600 border border-stone-200 hover:bg-stone-100"
-                                            )}
-                                        >
-                                            {cls}
-                                        </button>
-                                    ))}
+                                    {allClassNames.map((cls) => {
+                                        const info = getEncounterInfo(cls);
+                                        return (
+                                            <button
+                                                key={cls}
+                                                onClick={() => toggleClass(cls)}
+                                                className={cn(
+                                                    "px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                                                    selectedClasses.includes(cls)
+                                                        ? "bg-blue-100 text-blue-700 border border-blue-200"
+                                                        : "bg-stone-50 text-stone-600 border border-stone-200 hover:bg-stone-100"
+                                                )}
+                                            >
+                                                {info.emoji} {info.label}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                                 {selectedClasses.length > 0 && (
                                     <button
@@ -244,6 +281,8 @@ export default function DashboardPage() {
                         <input
                             type="date"
                             value={startDate}
+                            min={dataMinDate}
+                            max={endDate || dataMaxDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             className="text-sm bg-transparent border-none focus:ring-0 p-0 text-stone-700"
                         />
@@ -251,6 +290,8 @@ export default function DashboardPage() {
                         <input
                             type="date"
                             value={endDate}
+                            min={startDate || dataMinDate}
+                            max={dataMaxDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             className="text-sm bg-transparent border-none focus:ring-0 p-0 text-stone-700"
                         />
@@ -271,20 +312,26 @@ export default function DashboardPage() {
                         {classFilterOpen && (
                             <div className="absolute right-0 mt-2 w-56 bg-white border border-stone-200 rounded-xl shadow-xl z-20 p-2 overflow-hidden animate-in zoom-in-95 duration-200">
                                 <div className="max-h-60 overflow-y-auto">
-                                    {allClassNames.map((cls) => (
-                                        <label
-                                            key={cls}
-                                            className="flex items-center gap-3 px-3 py-2 hover:bg-stone-50 rounded-lg cursor-pointer transition-colors"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedClasses.includes(cls)}
-                                                onChange={() => toggleClass(cls)}
-                                                className="rounded border-stone-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
-                                            />
-                                            <span className="text-sm text-stone-700 capitalize">{cls}</span>
-                                        </label>
-                                    ))}
+                                    {allClassNames.map((cls) => {
+                                        const info = getEncounterInfo(cls);
+                                        return (
+                                            <label
+                                                key={cls}
+                                                className="flex items-center gap-3 px-3 py-2.5 hover:bg-stone-50 rounded-lg cursor-pointer transition-colors"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedClasses.includes(cls)}
+                                                    onChange={() => toggleClass(cls)}
+                                                    className="rounded border-stone-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                                                />
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm text-stone-700 font-medium">{info.emoji} {info.label}</span>
+                                                    <span className="text-[11px] text-stone-400">{info.description}</span>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
                                 </div>
                                 {selectedClasses.length > 0 && (
                                     <button
@@ -385,13 +432,17 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="bg-white p-4 md:p-6 rounded-2xl border border-stone-200 shadow-sm">
-                    <h4 className="text-base md:text-lg font-bold text-stone-900 mb-4 md:mb-6">Encounters by Class</h4>
+                    <h4 className="text-base md:text-lg font-bold text-stone-900 mb-1 md:mb-2">Encounters by Type</h4>
+                    <p className="text-xs text-stone-400 mb-4 md:mb-6 flex items-center gap-1">
+                        <Info className="h-3 w-3" />
+                        Tap a bar to see details
+                    </p>
                     <div className="h-56 md:h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={filteredClassSeries}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
                                 <XAxis
-                                    dataKey="class"
+                                    dataKey="label"
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fill: '#888', fontSize: 10 }}
@@ -404,7 +455,24 @@ export default function DashboardPage() {
                                 />
                                 <Tooltip
                                     cursor={{ fill: '#f8fafc' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '13px' }}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '13px', padding: '12px 16px' }}
+                                    content={({ active, payload }) => {
+                                        if (!active || !payload?.length) return null;
+                                        const d = payload[0].payload;
+                                        return (
+                                            <div className="bg-white rounded-xl shadow-xl border border-stone-100 p-3 min-w-[180px]">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-lg">{d.info?.emoji}</span>
+                                                    <span className="font-bold text-stone-900">{d.label}</span>
+                                                </div>
+                                                <p className="text-xs text-stone-400 mb-2">{d.info?.description}</p>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs text-stone-500">Encounters</span>
+                                                    <span className="font-bold text-indigo-600">{d.count?.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    }}
                                 />
                                 <Bar
                                     dataKey="count"
@@ -429,12 +497,12 @@ export default function DashboardPage() {
                         {data.top_conditions.map((item) => (
                             <div key={item.code} className="px-4 py-4 space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                    <span className="font-medium text-stone-900 text-sm">{item.display}</span>
+                                    <span className="font-medium text-stone-900 text-sm">{cleanConditionDisplay(item.display)}</span>
                                     <span className="bg-stone-100 px-2.5 py-0.5 rounded-full font-bold text-sm text-stone-700">
                                         {item.count.toLocaleString()}
                                     </span>
                                 </div>
-                                <span className="font-mono text-xs text-stone-400">{item.code}</span>
+                                <span className="font-mono text-xs text-stone-400">Code: {item.code}</span>
                             </div>
                         ))}
                     </div>
@@ -444,15 +512,15 @@ export default function DashboardPage() {
                         <thead>
                             <tr className="bg-stone-50 text-stone-500 font-semibold text-xs uppercase tracking-wider">
                                 <th className="px-6 py-4">Code</th>
-                                <th className="px-6 py-4">Condition Description</th>
-                                <th className="px-6 py-4 text-right">Frequency</th>
+                                <th className="px-6 py-4">Condition</th>
+                                <th className="px-6 py-4 text-right">How Often</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100 text-sm">
                             {data.top_conditions.map((item) => (
                                 <tr key={item.code} className="hover:bg-stone-50 transition-colors group">
                                     <td className="px-6 py-4 font-mono text-stone-500">{item.code}</td>
-                                    <td className="px-6 py-4 font-medium text-stone-900">{item.display}</td>
+                                    <td className="px-6 py-4 font-medium text-stone-900">{cleanConditionDisplay(item.display)}</td>
                                     <td className="px-6 py-4 text-right">
                                         <span className="bg-stone-100 group-hover:bg-blue-100 group-hover:text-blue-700 px-3 py-1 rounded-full font-bold transition-colors">
                                             {item.count.toLocaleString()}

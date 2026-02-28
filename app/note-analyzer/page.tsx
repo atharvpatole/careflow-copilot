@@ -222,9 +222,6 @@ export default function NoteAnalyzerPage() {
                                     <Brain className="h-5 w-5 md:h-6 md:w-6 text-indigo-600" />
                                 </div>
                                 <h5 className="font-bold text-slate-900 text-sm md:text-base">Created by Atharv Patole</h5>
-                                <p className="text-xs md:text-sm text-slate-500">
-                                    AI-powered clinical reasoning engine
-                                </p>
                             </div>
                         </div>
                     </div>
