@@ -3,7 +3,7 @@ import { join, basename } from 'path';
 
 /**
  * Finds NDJSON files in a directory that match a specific prefix.
- * Returns absolute paths sorted by filename.
+ * Returns absolute paths sorted deterministically.
  */
 export function findNdjsonFiles(baseDir: string, prefix: string): string[] {
     const files = readdirSync(baseDir, { recursive: true }) as string[];
@@ -16,5 +16,6 @@ export function findNdjsonFiles(baseDir: string, prefix: string): string[] {
         .map(file => join(baseDir, file))
         .filter(fullPath => statSync(fullPath).isFile());
 
-    return matches.sort((a, b) => basename(a).localeCompare(basename(b)));
+    // Stable sort by absolute path guarantees deterministic processing order
+    return matches.sort((a, b) => a.localeCompare(b));
 }

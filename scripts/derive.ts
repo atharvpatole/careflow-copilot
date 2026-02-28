@@ -1,14 +1,16 @@
-import { existsSync, readdirSync, rmSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import extract from 'extract-zip';
 import { buildMetrics } from '../lib/fhir/metrics';
+import { findNdjsonFiles } from '../lib/fhir/file-discovery';
 
 async function main() {
     const rootPath = process.cwd();
     const rawZipPath = join(rootPath, 'data/raw/fhir-100.zip');
     const rawDirPath = join(rootPath, 'data/raw/fhir');
-    const tmpPath = join(rootPath, '.tmp/fhir');
     const derivedDir = join(rootPath, 'data/derived');
+    // Ensure all temporary writes happen inside data/derived which is our workspace area
+    const tmpPath = join(derivedDir, '.tmp-fhir');
 
     let activeSource: string | null = null;
     let isZipSource = false;
@@ -39,9 +41,17 @@ async function main() {
         process.exit(1);
     }
 
+    // Discover input files
+    console.log(`[Discovery] Scanning ${activeSource}...`);
+    const encounterFiles = findNdjsonFiles(activeSource, 'Encounter');
+    const conditionFiles = findNdjsonFiles(activeSource, 'Condition');
+    console.log(`[Discovery] Found ${encounterFiles.length} Encounter files.`);
+    console.log(`[Discovery] Found ${conditionFiles.length} Condition files.`);
+
     // Build metrics
-    console.log(`[Metrics] Starting aggregation from ${activeSource}...`);
-    const metrics = await buildMetrics(activeSource);
+    console.log(`[Metrics] Starting aggregation...`);
+    const metrics = await buildMetrics(encounterFiles, conditionFiles);
+    console.log(`[Metrics] Processed ${metrics.kpis.total_encounters} total encounters.`);
 
     // Ensure derived dir exists
     if (!existsSync(derivedDir)) mkdirSync(derivedDir, { recursive: true });

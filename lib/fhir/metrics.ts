@@ -1,5 +1,4 @@
 import { readNdjson } from './ndjson';
-import { findNdjsonFiles } from './file-discovery';
 
 export type MetricsOutput = {
     generated_at: string;
@@ -21,9 +20,7 @@ export type MetricsOutput = {
 /**
  * Builds core metrics from raw FHIR NDJSON files.
  */
-export async function buildMetrics(dataDir: string): Promise<MetricsOutput> {
-    const encounterFiles = findNdjsonFiles(dataDir, 'Encounter');
-    const conditionFiles = findNdjsonFiles(dataDir, 'Condition');
+export async function buildMetrics(encounterFiles: string[], conditionFiles: string[]): Promise<MetricsOutput> {
 
     const encountersByDayMap = new Map<string, number>();
     const encountersByClassMap = new Map<string, number>();
@@ -114,11 +111,11 @@ export async function buildMetrics(dataDir: string): Promise<MetricsOutput> {
 
     const encounters_by_class = Array.from(encountersByClassMap.entries())
         .map(([className, count]) => ({ class: className, count }))
-        .sort((a, b) => b.count - a.count);
+        .sort((a, b) => b.count - a.count || a.class.localeCompare(b.class));
 
     const top_conditions = Array.from(conditionCountMap.entries())
         .map(([code, entry]) => ({ code, display: entry.display, count: entry.count }))
-        .sort((a, b) => b.count - a.count)
+        .sort((a, b) => b.count - a.count || a.code.localeCompare(b.code))
         .slice(0, 10);
 
     const avg_los_days = validLosCount > 0 ? (totalLosMs / validLosCount) / (1000 * 60 * 60 * 24) : null;
