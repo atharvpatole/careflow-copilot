@@ -13,6 +13,20 @@ Includes a dashboard, ML-driven patient volume forecast, and LLM-powered clinica
 - **LLM Extraction**: The \`/api/note-extract\` endpoint calls OpenAI (or a mock fallback) to perform clinical entity extraction.
 - **Observability**: Production environments emit OTel traces directly to **Braintrust** for monitoring and evaluation.
 
+## Braintrust Setup
+
+To enable observability for the OpenAI extraction pipeline, add these variables to your `.env.local`:
+
+```env
+BRAINTRUST_API_KEY=your_api_key_here
+BRAINTRUST_PARENT="project_name:careflow-copilot"
+```
+
+To test locally:
+1. Run `npm run dev`
+2. Submit a note in the `/note-analyzer` UI (or directly via `/api/note-extract`)
+3. Verify traces and spans populate in your Braintrust project UI under the specified `project_name`.
+
 ## Local Setup
 
 1. **Install dependencies**:

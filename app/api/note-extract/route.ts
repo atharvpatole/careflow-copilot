@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { z } from "zod";
+import { initLogger, wrapOpenAI } from "braintrust";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { NoteExtractSchema } from "../../../lib/llm/schema";
 import { buildSystemPrompt, buildUserPrompt, PROMPT_VERSION } from "../../../lib/llm/prompt";
@@ -12,6 +13,7 @@ const RequestSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    const startTime = Date.now();
     try {
         const body = await req.json();
         const parsedBody = RequestSchema.safeParse(body);
@@ -25,33 +27,26 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "OpenAI API key is missing. Please configure OPENAI_API_KEY in your environment." }, { status: 500 });
         }
 
-        // Never log raw note text to console in production, only lengths
-        if (process.env.NODE_ENV === "production") {
-            console.log(`[NoteExtract API] Processing note of length: ${note.length}`);
-        } else {
-            console.log(`[NoteExtract API] Processing note of length: ${note.length}`);
-        }
+        console.log(`[NoteExtract API] Processing note of length: ${note.length}`);
 
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        // Initialize the Braintrust logger and wrap the OpenAI client per documentation
+        const logger = initLogger({
+            projectName: "careflow-copilot",
+            apiKey: process.env.BRAINTRUST_API_KEY,
+        });
 
-        // Debug log for property existence in this environment
-        console.log(`[NoteExtract API] SDK Checks: openai.chat=${!!openai.chat}, openai.beta=${!!openai.beta}`);
+        // wrapOpenAI() automatically captures all AI calls as traces
+        const client = wrapOpenAI(
+            new OpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+            }),
+        );
 
-        // Try both paths commonly used for Structured Outputs in different SDK versions
         let completion;
-        if ((openai as any).chat?.completions?.parse) {
-            completion = await (openai as any).chat.completions.parse({
-                model: "gpt-4o-mini",
-                messages: [
-                    { role: "system", content: buildSystemPrompt() },
-                    { role: "user", content: buildUserPrompt(note) },
-                ],
-                response_format: zodResponseFormat(NoteExtractSchema, "note_extract"),
-                temperature: 0.2,
-                store: false,
-            });
-        } else if ((openai as any).beta?.chat?.completions?.parse) {
-            completion = await (openai as any).beta.chat.completions.parse({
+
+        // Try paths commonly used for Structured Outputs
+        if ((client as any).chat?.completions?.parse) {
+            completion = await (client as any).chat.completions.parse({
                 model: "gpt-4o-mini",
                 messages: [
                     { role: "system", content: buildSystemPrompt() },
@@ -62,13 +57,28 @@ export async function POST(req: Request) {
                 store: false,
             });
         } else {
-            throw new Error("OpenAI SDK version does not support structured output '.parse()' helper on either .chat or .beta.chat namespaces. Please check package.json version.");
+            throw new Error("OpenAI SDK version does not support structured output '.parse()' helper.");
         }
 
         const result = completion.choices[0].message.parsed;
         if (!result) {
             throw new Error("Failed to parse the response structure from OpenAI.");
         }
+
+        // You can also use logger.log() for custom traces (e.g., multimodal inputs, metadata)
+        // We omit raw note content to preserve PHI safety bounds
+        logger.log({
+            input: "Redacted note for extraction",
+            output: "Schema populated successfully",
+            metadata: {
+                prompt_version: PROMPT_VERSION,
+                note_length_chars: note.length,
+                model: completion.model || "gpt-4o-mini",
+                red_flags_count: result.redFlags.length,
+                success: true,
+                latency_ms: Date.now() - startTime,
+            },
+        });
 
         return NextResponse.json({
             prompt_version: PROMPT_VERSION,
@@ -84,6 +94,20 @@ export async function POST(req: Request) {
             code?: string,
             type?: string
         };
+
+        // If it failed, log the error failure to braintrust too
+        const logger = initLogger({
+            projectName: "careflow-copilot",
+            apiKey: process.env.BRAINTRUST_API_KEY,
+        });
+        logger.log({
+            input: "Failed note extraction",
+            output: errObj.message || "Unknown error",
+            metadata: {
+                success: false,
+                latency_ms: Date.now() - startTime,
+            }
+        });
 
         console.error("[NoteExtract API] Error:", errObj);
 
