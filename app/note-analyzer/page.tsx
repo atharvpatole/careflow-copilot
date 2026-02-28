@@ -83,7 +83,8 @@ export default function NoteAnalyzerPage() {
 
             if (!res.ok) {
                 const errData = await res.json();
-                throw new Error(errData.error || errData.message || "Failed to analyze note");
+                const errorMessage = errData.error?.message || errData.error || errData.message || "Failed to analyze note";
+                throw new Error(errorMessage);
             }
 
             const data = await res.json();
