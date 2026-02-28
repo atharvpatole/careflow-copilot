@@ -13,7 +13,8 @@
     "data:build": "tsx scripts/derive.ts",
     "smoke:ndjson": "tsx scripts/smoke-ndjson.ts",
     "data:check": "tsx scripts/check-derived.ts",
-    "smoke:llm": "tsx scripts/smoke-llm.ts"
+    "smoke:llm": "tsx scripts/smoke-llm.ts",
+    "verify": "npm run data:build && npm run data:check && npm run lint && npm run build"
   },
   "dependencies": {
     "@braintrust/core": "^0.0.95",

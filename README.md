@@ -5,7 +5,9 @@ Includes a dashboard, ML-driven patient volume forecast, and LLM-powered clinica
 
 ## Dataset
 - **Synthetic Synthea FHIR Bulk Export NDJSON**: Uses a 100 patient dataset.
-- **Raw Data Storage**: The dataset is stored as a ZIP in `data/raw/fhir-100.zip` (always committed as zipped; NOT unzipped in the repo).
+- **Exact placement**:
+  - Valid: A zip file at `data/raw/fhir-100.zip` containing the `.ndjson` files.
+  - Invalid: Do not place raw `.ndjson` files in `data/raw/` or `data/raw/fhir-100/`. Keep them zipped to avoid bloating the git repo.
 
 ## How It Works
 - **Build-time Pipeline**: A build-time process (via \`npm run derive\`) unzips and parses the NDJSON to generate \`data/derived/metrics.json\` and \`data/derived/forecast.json\`.
@@ -13,14 +15,17 @@ Includes a dashboard, ML-driven patient volume forecast, and LLM-powered clinica
 - **LLM Extraction**: The \`/api/note-extract\` endpoint calls OpenAI (or a mock fallback) to perform clinical entity extraction.
 - **Observability**: Production environments emit OTel traces directly to **Braintrust** for monitoring and evaluation.
 
-## Braintrust Setup
+## Environment Variables (Local + Vercel)
 
-To enable observability for the OpenAI extraction pipeline, add these variables to your `.env.local`:
+For local development (`.env.local`) and Vercel deployment, ensure the following exact environment variables are set:
 
 ```env
-BRAINTRUST_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_openai_api_key
+BRAINTRUST_API_KEY=your_braintrust_api_key
 BRAINTRUST_PARENT="project_name:careflow-copilot"
 ```
+
+These unlock the LLM extraction pipeline and observability platform.
 
 To test locally:
 1. Run `npm run dev`
@@ -48,8 +53,14 @@ To test locally:
    Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 
 ## Deployment
-- **Vercel**: Optimized for Vercel deployment.
-- **Bundle Optimization**: \`.vercelignore\` ensures only derived JSON and app code are deployed, keeping the serverless bundle size minimal.
+
+Steps for Vercel deployment:
+1. **Push to GitHub**: Commit your changes and push to a GitHub repository.
+2. **Import to Vercel**: Create a new project in Vercel and import your repository.
+3. **Set Env Vars**: Assign the exact environment variables: `OPENAI_API_KEY`, `BRAINTRUST_API_KEY`, and `BRAINTRUST_PARENT`.
+4. **Deploy**: Click Deploy. Vercel will automatically run the derivation scripts during build.
+5. **Open Applications**: Navigate to `/dashboard`, `/forecast`, and `/note-analyzer` to verify they load.
+6. **Verify Braintrust Traces**: Submit an extraction on `/note-analyzer` and confirm traces appear in your Braintrust dashboard.
 
 ## Project Structure
 - \`/app\`: Next.js pages and API routes.

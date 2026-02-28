@@ -88,8 +88,12 @@ export default function NoteAnalyzerPage() {
 
             const data = await res.json();
             setResponse(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unknown error occurred");
+            }
         } finally {
             setLoading(false);
         }
@@ -220,13 +224,13 @@ export default function NoteAnalyzerPage() {
                                                 <div className="flex items-center justify-between">
                                                     <span className="font-bold text-slate-100">{flag.label}</span>
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-black ${flag.severity === 'high' ? 'bg-rose-500' :
-                                                            flag.severity === 'medium' ? 'bg-amber-500' : 'bg-slate-500'
+                                                        flag.severity === 'medium' ? 'bg-amber-500' : 'bg-slate-500'
                                                         }`}>
                                                         {flag.severity}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-slate-300 italic leading-relaxed">
-                                                    "{flag.evidence}"
+                                                    &quot;{flag.evidence}&quot;
                                                 </p>
                                             </div>
                                         ))}
@@ -286,6 +290,7 @@ function TabsSection({ result }: { result: NoteExtractResult }) {
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-3 px-8 py-5 text-sm font-bold transition-all relative min-w-fit ${activeTab === tab.id ? 'text-indigo-600 bg-white' : 'text-slate-400 hover:text-slate-600'
                             }`}

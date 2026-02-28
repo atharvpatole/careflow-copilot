@@ -12,19 +12,58 @@ const RequestSchema = z.object({
     note: z.string().min(50).max(8000),
 });
 
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX = 10;
+const rateLimits = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(ip: string) {
+    const now = Date.now();
+    let data = rateLimits.get(ip);
+
+    if (!data || now > data.resetTime) {
+        data = { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS };
+        rateLimits.set(ip, data);
+        return { limitReached: false };
+    }
+
+    data.count++;
+
+    if (data.count > RATE_LIMIT_MAX) {
+        const retryAfterSeconds = Math.ceil((data.resetTime - now) / 1000);
+        return { limitReached: true, retryAfter: retryAfterSeconds };
+    }
+
+    return { limitReached: false };
+}
+
 export async function POST(req: Request) {
     const startTime = Date.now();
     try {
+        const ip = req.headers.get("x-forwarded-for") || "127.0.0.1";
+        const { limitReached, retryAfter } = checkRateLimit(ip);
+        if (limitReached) {
+            return NextResponse.json(
+                { error: { code: "rate_limited", message: "Too many requests. Please try again later." } },
+                { status: 429, headers: { "Retry-After": String(retryAfter) } }
+            );
+        }
+
         const body = await req.json();
         const parsedBody = RequestSchema.safeParse(body);
         if (!parsedBody.success) {
-            return NextResponse.json({ error: "Invalid request. Note must be between 50 and 8000 characters." }, { status: 400 });
+            return NextResponse.json(
+                { error: { code: "invalid_request", message: "Invalid request. Note must be between 50 and 8000 characters." } },
+                { status: 400 }
+            );
         }
 
         const note = parsedBody.data.note;
 
         if (!process.env.OPENAI_API_KEY) {
-            return NextResponse.json({ error: "OpenAI API key is missing. Please configure OPENAI_API_KEY in your environment." }, { status: 500 });
+            return NextResponse.json(
+                { error: { code: "missing_api_key", message: "OpenAI API key is missing. Please configure OPENAI_API_KEY in your environment." } },
+                { status: 500 }
+            );
         }
 
         console.log(`[NoteExtract API] Processing note of length: ${note.length}`);
@@ -45,7 +84,9 @@ export async function POST(req: Request) {
         let completion;
 
         // Try paths commonly used for Structured Outputs
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((client as any).chat?.completions?.parse) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             completion = await (client as any).chat.completions.parse({
                 model: "gpt-4o-mini",
                 messages: [
@@ -115,9 +156,10 @@ export async function POST(req: Request) {
         if (errObj.code === 'insufficient_quota') {
             return NextResponse.json(
                 {
-                    error: "OpenAI Quota Exceeded",
-                    message: "The API key has insufficient credits or has reached its quota. Even for new accounts, OpenAI requires a minimum prepaid balance (usually $5) to activate the API. Please check your billing dashboard: https://platform.openai.com/settings/organization/billing",
-                    request_id: errObj.request_id || "unknown"
+                    error: {
+                        code: "insufficient_quota",
+                        message: "The API key has insufficient credits or has reached its quota. Even for new accounts, OpenAI requires a minimum prepaid balance (usually $5) to activate the API. Please check your billing dashboard: https://platform.openai.com/settings/organization/billing"
+                    }
                 },
                 { status: 402 } // Payment Required / Quota Exceeded
             );
@@ -126,9 +168,10 @@ export async function POST(req: Request) {
         if (errObj.status === 401) {
             return NextResponse.json(
                 {
-                    error: "OpenAI Authentication Failed",
-                    message: "The API key in .env.local is either invalid or lacks the necessary permissions. If using a 'Project API Key', ensure it has 'Read/Write' access to the Chat model in your OpenAI Project settings.",
-                    request_id: errObj.request_id || "unknown"
+                    error: {
+                        code: "unauthorized",
+                        message: "The API key in .env.local is either invalid or lacks the necessary permissions. If using a 'Project API Key', ensure it has 'Read/Write' access to the Chat model in your OpenAI Project settings."
+                    }
                 },
                 { status: 401 }
             );
@@ -138,9 +181,10 @@ export async function POST(req: Request) {
         if (errObj.name === 'LengthFinishReasonError' || errObj.status === 402 || errObj.status === 400 || errObj.message?.includes('parse')) {
             return NextResponse.json(
                 {
-                    error: "Failed to parse OpenAI structure.",
-                    message: errObj.message,
-                    request_id: errObj.request_id || "unknown"
+                    error: {
+                        code: "parse_error",
+                        message: errObj.message || "Failed to parse OpenAI structure."
+                    }
                 },
                 { status: 502 }
             );
@@ -148,9 +192,10 @@ export async function POST(req: Request) {
 
         return NextResponse.json(
             {
-                error: "Internal Server Error",
-                message: errObj.message || "An unexpected error occurred during note analysis.",
-                code: errObj.code
+                error: {
+                    code: errObj.code || "internal_error",
+                    message: errObj.message || "An unexpected error occurred during note analysis."
+                }
             },
             { status: 500 }
         );
