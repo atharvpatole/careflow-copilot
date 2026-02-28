@@ -135,7 +135,7 @@ export default function NoteAnalyzerPage() {
                         <textarea
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
-                            placeholder="Paste practitioner notes, SOAP entries, or clinical observations here... (min 50 characters)"
+                            placeholder="Paste practitioner notes, SOAP entries, or clinical observations here..."
                             className="w-full min-h-[280px] p-6 text-slate-800 placeholder:text-slate-400 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-lg leading-relaxed resize-y"
                             disabled={loading}
                         />
@@ -151,7 +151,7 @@ export default function NoteAnalyzerPage() {
                         </div>
                         <button
                             type="submit"
-                            disabled={loading || note.length < 50}
+                            disabled={loading || note.trim().length === 0}
                             className="w-full md:w-auto px-10 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 hover:translate-y-[-2px] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 flex items-center justify-center gap-3 text-lg"
                         >
                             {loading ? (

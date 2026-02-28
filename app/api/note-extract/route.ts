@@ -9,7 +9,7 @@ import { buildSystemPrompt, buildUserPrompt, PROMPT_VERSION } from "../../../lib
 export const runtime = "nodejs";
 
 const RequestSchema = z.object({
-    note: z.string().min(50).max(8000),
+    note: z.string().min(1),
 });
 
 const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         const parsedBody = RequestSchema.safeParse(body);
         if (!parsedBody.success) {
             return NextResponse.json(
-                { error: { code: "invalid_request", message: "Invalid request. Note must be between 50 and 8000 characters." } },
+                { error: { code: "invalid_request", message: "Invalid request. Note cannot be empty." } },
                 { status: 400 }
             );
         }
