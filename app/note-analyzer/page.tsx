@@ -36,28 +36,7 @@ interface NoteExtractResponse {
     result: NoteExtractResult;
 }
 
-const SAMPLE_NOTE = `
-CHIEF COMPLAINT: Patient presents with persistent headache and mild nausea for the past 3 days.
-
-HPI: 45-year-old male reporting a throbbing, bifrontal headache that started 3 days ago. He rates the pain as 6/10. He also complains of mild intermittent nausea, but no vomiting. He denies visual changes, fever, neck stiffness, or weakness. He reports taking over-the-counter Ibuprofen 400mg with minimal relief. 
-
-PAST MEDICAL HISTORY:
-- Hypertension
-
-MEDICATIONS:
-- Lisinopril 10mg daily
-- Ibuprofen 400mg PRN for pain
-
-ALLERGIES:
-- Penicillin (causes hives)
-
-ASSESSMENT & PLAN:
-1. Tension-type headache. Recommended rest, hydration, and adjusting pain management to Acetaminophen. 
-2. Nausea: likely related to headache. Recommended small, frequent meals.
-3. Hypertension: well controlled. Continue current Lisinopril.
-4. Red flag screen negative. If symptoms worsen, develop visual changes, or neck stiffness, patient should seek immediate emergency care (High severity potential if missed).
-5. Follow up in clinic in 1 week if no improvement.
-`;
+const SAMPLE_NOTE = `Patient presents with persistent headache and mild nausea for the past 3 days.`;
 
 export default function NoteAnalyzerPage() {
     const [note, setNote] = useState("");
@@ -116,7 +95,7 @@ export default function NoteAnalyzerPage() {
                         </h1>
                     </div>
                     <p className="text-slate-500 text-lg">
-                        Transform raw clinical shorthand into structured, actionable insights.
+                        Type any clinical input — from a brief complaint to a full note — and let AI generate a comprehensive analysis.
                     </p>
                 </div>
                 <button
@@ -136,7 +115,7 @@ export default function NoteAnalyzerPage() {
                         <textarea
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
-                            placeholder="Paste practitioner notes, SOAP entries, or clinical observations here..."
+                            placeholder="Type anything — 'i have headache from past 2 days', 'chest pain radiating to left arm', or paste a full clinical note..."
                             className="w-full min-h-[280px] p-6 text-slate-800 placeholder:text-slate-400 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-lg leading-relaxed resize-y"
                             disabled={loading}
                         />
@@ -158,7 +137,7 @@ export default function NoteAnalyzerPage() {
                             {loading ? (
                                 <>
                                     <Loader2 className="h-5 w-5 animate-spin" />
-                                    Extracting...
+                                    Analyzing...
                                 </>
                             ) : (
                                 <>
