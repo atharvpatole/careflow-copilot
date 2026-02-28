@@ -16,8 +16,9 @@ export async function GET() {
                 "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
             },
         });
-    } catch (error: any) {
-        console.error(`[API/Metrics] Error: ${error.message}`);
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        console.error(`[API/Metrics] Error: ${msg}`);
         return NextResponse.json(
             {
                 error: "Metrics data not found",

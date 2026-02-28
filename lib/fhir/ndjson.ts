@@ -5,7 +5,7 @@ import * as readline from 'readline';
  * Memory-safe NDJSON reader using Node streams and readline.
  * Yields parsed objects line-by-line.
  */
-export async function* readNdjson<T = any>(filePath: string): AsyncGenerator<T> {
+export async function* readNdjson<T = unknown>(filePath: string): AsyncGenerator<T> {
     if (!existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);
     }
@@ -24,9 +24,9 @@ export async function* readNdjson<T = any>(filePath: string): AsyncGenerator<T> 
 
         try {
             yield JSON.parse(trimmed) as T;
-        } catch (err: any) {
+        } catch (err: unknown) {
             throw new Error(
-                `Invalid JSON at ${filePath}:${lineNumber} - ${err.message}\nLine: ${trimmed.substring(0, 100)}${trimmed.length > 100 ? '...' : ''
+                `Invalid JSON at ${filePath}:${lineNumber} - ${(err as Error).message}\nLine: ${trimmed.substring(0, 100)}${trimmed.length > 100 ? '...' : ''
                 }`
             );
         }

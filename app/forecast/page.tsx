@@ -10,25 +10,16 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    Legend,
     ReferenceLine,
 } from "recharts";
 import {
     TrendingUp,
-    Info,
-    Calendar,
     AlertCircle,
     Loader2,
     ArrowUpRight,
     Target,
     Shield,
 } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
 
 // Types
 interface ForecastData {
@@ -53,8 +44,9 @@ export default function ForecastPage() {
                 }
                 const jsonData = await res.json();
                 setData(jsonData);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                if (err instanceof Error) setError(err.message);
+                else setError(String(err));
             } finally {
                 setLoading(false);
             }
@@ -84,7 +76,7 @@ export default function ForecastPage() {
         const lastHistory = historyMapped[historyMapped.length - 1];
         if (lastHistory && forecastMapped.length > 0) {
             // Small adjustment: make the first forecast point also contain the last history count for visual continuity
-            (forecastMapped[0] as any).historyLink = lastHistory.count;
+            (forecastMapped[0] as { historyLink?: number }).historyLink = lastHistory.count;
         }
 
         return [...historyMapped, ...forecastMapped];

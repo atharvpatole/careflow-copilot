@@ -69,7 +69,7 @@ function check() {
     }
 
     let badBounds = 0;
-    fData.forecast.forEach((f: any, i: number) => {
+    fData.forecast.forEach((f: { yhat: number; lower: number; upper: number }, i: number) => {
         if (typeof f.yhat !== 'number' || typeof f.lower !== 'number' || typeof f.upper !== 'number') {
             console.error(`[Fail] Forecast row ${i} has invalid number types:`, f);
             process.exit(1);

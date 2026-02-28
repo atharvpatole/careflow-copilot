@@ -1,0 +1,52 @@
+﻿
+> careflow-copilot@0.1.0 lint
+> eslint
+
+
+C:\Atharv\Git\careflow\careflow-copilot\app\api\forecast\route.ts
+  19:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\app\api\metrics\route.ts
+  19:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\app\api\note-extract\route.ts
+  58:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\app\dashboard\page.tsx
+   13:5   warning  'Legend' is defined but never used        @typescript-eslint/no-unused-vars
+   20:5   warning  'Search' is defined but never used        @typescript-eslint/no-unused-vars
+   26:5   warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+   27:5   warning  'ChevronLeft' is defined but never used   @typescript-eslint/no-unused-vars
+   78:77  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:27  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  358:61  warning  'idx' is defined but never used           @typescript-eslint/no-unused-vars
+
+C:\Atharv\Git\careflow\careflow-copilot\app\forecast\page.tsx
+  13:5   warning  'Legend' is defined but never used        @typescript-eslint/no-unused-vars
+  18:5   warning  'Info' is defined but never used          @typescript-eslint/no-unused-vars
+  19:5   warning  'Calendar' is defined but never used      @typescript-eslint/no-unused-vars
+  29:10  warning  'cn' is defined but never used            @typescript-eslint/no-unused-vars
+  56:27  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:35  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\lib\fhir\metrics.ts
+  37:50  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  77:17  warning  'patientRef' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  96:50  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\lib\fhir\ndjson.ts
+   8:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\scripts\check-derived.ts
+  72:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\scripts\derive.ts
+  31:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\scripts\smoke-ndjson.ts
+  45:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 25 problems (15 errors, 10 warnings)
+

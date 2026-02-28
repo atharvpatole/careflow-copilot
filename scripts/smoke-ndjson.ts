@@ -42,13 +42,14 @@ async function runSmoke() {
     console.log('[Test] Reading records...');
     let count = 0;
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const obj of readNdjson<any>(testFile)) {
             console.log(` - Record[${count}]: resourceType="${obj.resourceType}" | id="${obj.id}"`);
             count++;
             if (count >= 3) break;
         }
-    } catch (err: any) {
-        console.error(`[Error] Reader failed: ${err.message}`);
+    } catch (err: unknown) {
+        console.error(`[Error] Reader failed: ${(err as Error).message}`);
         process.exit(1);
     }
 

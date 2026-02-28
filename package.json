@@ -12,12 +12,14 @@
     "validate": "tsx scripts/validate.ts",
     "data:build": "tsx scripts/derive.ts",
     "smoke:ndjson": "tsx scripts/smoke-ndjson.ts",
-    "data:check": "tsx scripts/check-derived.ts"
+    "data:check": "tsx scripts/check-derived.ts",
+    "smoke:llm": "tsx scripts/smoke-llm.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
+    "openai": "^6.25.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.7.0",

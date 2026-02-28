@@ -10,21 +10,17 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    Legend,
     ResponsiveContainer,
 } from "recharts";
 import {
     Users,
     Clock,
     RefreshCw,
-    Search,
     Filter,
     Calendar,
     AlertCircle,
     Loader2,
     Table as TableIcon,
-    ChevronRight,
-    ChevronLeft,
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -75,7 +71,7 @@ export default function DashboardPage() {
 
                 // Initialize filters based on data
                 if (jsonData.series.encounters_by_day.length > 0) {
-                    const dates = jsonData.series.encounters_by_day.map((d: any) => d.date);
+                    const dates = jsonData.series.encounters_by_day.map((d: { date: string }) => d.date);
                     // Set to last 30 days of data if possible
                     const sortedDates = [...dates].sort();
                     setEndDate(sortedDates[sortedDates.length - 1]);
@@ -84,8 +80,9 @@ export default function DashboardPage() {
                     const startIndex = Math.max(0, sortedDates.length - 30);
                     setStartDate(sortedDates[startIndex]);
                 }
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                if (err instanceof Error) setError(err.message);
+                else setError(String(err));
             } finally {
                 setLoading(false);
             }
@@ -355,7 +352,7 @@ export default function DashboardPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100 text-sm">
-                            {data.top_conditions.map((item, idx) => (
+                            {data.top_conditions.map((item) => (
                                 <tr key={item.code} className="hover:bg-stone-50 transition-colors group">
                                     <td className="px-6 py-4 font-mono text-stone-500">{item.code}</td>
                                     <td className="px-6 py-4 font-medium text-stone-900">{item.display}</td>

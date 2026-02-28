@@ -1,0 +1,15 @@
+﻿
+> careflow-copilot@0.1.0 lint
+> eslint
+
+
+C:\Atharv\Git\careflow\careflow-copilot\app\api\note-extract\route.ts
+  59:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Atharv\Git\careflow\careflow-copilot\app\forecast\page.tsx
+  23:10  warning  'clsx' is defined but never used        @typescript-eslint/no-unused-vars
+  23:21  warning  'ClassValue' is defined but never used  @typescript-eslint/no-unused-vars
+  24:10  warning  'twMerge' is defined but never used     @typescript-eslint/no-unused-vars
+
+Γ£û 4 problems (1 error, 3 warnings)
+

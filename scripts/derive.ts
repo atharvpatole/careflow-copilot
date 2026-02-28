@@ -28,8 +28,8 @@ async function main() {
             await extract(rawZipPath, { dir: tmpPath });
             activeSource = tmpPath;
             isZipSource = true;
-        } catch (err: any) {
-            throw new Error(`Failed to extract zip: ${err.message}`);
+        } catch (err: unknown) {
+            throw new Error(`Failed to extract zip: ${(err as Error).message}`);
         }
     } else if (existsSync(rawDirPath)) {
         console.log(`[Source] Found extracted FHIR data at ${rawDirPath}`);

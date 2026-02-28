@@ -34,6 +34,7 @@ export async function buildMetrics(encounterFiles: string[], conditionFiles: str
 
     // Process Encounters
     for (const file of encounterFiles) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const encounter of readNdjson<any>(file)) {
             totalEncounters++;
 
@@ -74,7 +75,7 @@ export async function buildMetrics(encounterFiles: string[], conditionFiles: str
     let patientsMeetingRevisit = 0;
     let patientsWithMultipleEncs = 0;
 
-    for (const [patientRef, starts] of patientEncounters.entries()) {
+    for (const starts of patientEncounters.values()) {
         if (starts.length >= 2) {
             patientsWithMultipleEncs++;
             // Sort start times
@@ -93,6 +94,7 @@ export async function buildMetrics(encounterFiles: string[], conditionFiles: str
 
     // Process Conditions
     for (const file of conditionFiles) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for await (const condition of readNdjson<any>(file)) {
             const coding = condition.code?.coding?.[0];
             if (coding?.code && coding?.display) {
