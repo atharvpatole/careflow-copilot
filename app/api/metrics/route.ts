@@ -1,16 +1,29 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { NextResponse } from "next/server";
+import { readFile } from "fs/promises";
+import { join } from "path";
+
+export const runtime = "nodejs";
 
 export async function GET() {
+    const filePath = join(process.cwd(), "data", "derived", "metrics.json");
+
     try {
-        const dataPath = path.join(process.cwd(), 'data/derived/metrics.json');
-        if (fs.existsSync(dataPath)) {
-            const data = fs.readFileSync(dataPath, 'utf-8');
-            return NextResponse.json(JSON.parse(data));
-        }
-        return NextResponse.json({ error: 'Metrics file not found' }, { status: 404 });
-    } catch (err) {
-        return NextResponse.json({ error: 'Failed to load metrics' }, { status: 500 });
+        const content = await readFile(filePath, "utf-8");
+        const data = JSON.parse(content);
+
+        return NextResponse.json(data, {
+            headers: {
+                "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+            },
+        });
+    } catch (error: any) {
+        console.error(`[API/Metrics] Error: ${error.message}`);
+        return NextResponse.json(
+            {
+                error: "Metrics data not found",
+                instruction: "Please run 'npm run data:build' to generate derived JSON files.",
+            },
+            { status: 500 }
+        );
     }
 }
