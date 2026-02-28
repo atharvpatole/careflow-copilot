@@ -1,0 +1,17 @@
+﻿
+> careflow-copilot@0.1.0 smoke:ndjson
+> tsx scripts/smoke-ndjson.ts
+
+--- NDJSON Smoke Test ---
+[Prep] Found zip at C:\Atharv\Git\careflow\careflow-copilot\data\raw\fhir-100.zip. Extracting...
+[Prep] Extracted 18 items.
+[Test] File: C:\Atharv\Git\careflow\careflow-copilot\.tmp\smoke-fhir\sample-bulk-fhir-datasets-100-patients\AllergyIntolerance.000.ndjson
+[Test] Reading records...
+ - Record[0]: resourceType="AllergyIntolerance" | id="022c13b2-1f26-0dee-5bab-acf9a1dced7d"
+ - Record[1]: resourceType="AllergyIntolerance" | id="04ab5dd9-0ac7-a5be-900d-af947b5a8281"
+ - Record[2]: resourceType="AllergyIntolerance" | id="1504a577-0d0e-189d-3ab5-5cd215efb770"
+[Test] Counting lines...
+ - Total valid lines: 75
+[Cleanup] Removing temporary files...
+
+Smoke test PASSED.

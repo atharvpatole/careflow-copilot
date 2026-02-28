@@ -9,7 +9,8 @@
     "lint": "eslint",
     "derive": "tsx scripts/derive.ts",
     "validate": "tsx scripts/validate.ts",
-    "data:build": "tsx scripts/derive.ts"
+    "data:build": "tsx scripts/derive.ts",
+    "smoke:ndjson": "tsx scripts/smoke-ndjson.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
