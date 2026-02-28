@@ -6,7 +6,7 @@ import { findNdjsonFiles } from '../lib/fhir/file-discovery';
 
 async function main() {
     const rootPath = process.cwd();
-    const rawZipPath = join(rootPath, 'data/raw/fhir-100.zip');
+    const rawZipPath = join(rootPath, 'data/raw/fhir-1000.zip');
     const rawDirPath = join(rootPath, 'data/raw/fhir');
     const derivedDir = join(rootPath, 'data/derived');
     // Ensure all temporary writes happen inside data/derived which is our workspace area

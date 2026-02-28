@@ -5,7 +5,7 @@ import extract from 'extract-zip';
 
 async function runSmoke() {
     const root = process.cwd();
-    const zipPath = join(root, 'data/raw/fhir-100.zip');
+    const zipPath = join(root, 'data/raw/fhir-1000.zip');
     const tmpDir = join(root, '.tmp/smoke-fhir');
 
     console.log('--- NDJSON Smoke Test ---');

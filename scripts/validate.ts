@@ -5,7 +5,7 @@ function validate() {
     const requirements = [
         'data/derived/metrics.json',
         'data/derived/forecast.json',
-        'data/raw/fhir-100.zip'
+        'data/raw/fhir-1000.zip'
     ];
 
     for (const req of requirements) {
