@@ -76,8 +76,39 @@ export async function POST(req: Request) {
             result: result,
         });
     } catch (error: unknown) {
-        const errObj = error as { name?: string, status?: number, message?: string, request_id?: string };
+        const errObj = error as {
+            name?: string,
+            status?: number,
+            message?: string,
+            request_id?: string,
+            code?: string,
+            type?: string
+        };
+
         console.error("[NoteExtract API] Error:", errObj);
+
+        // Specific handling for common OpenAI account issues
+        if (errObj.code === 'insufficient_quota') {
+            return NextResponse.json(
+                {
+                    error: "OpenAI Quota Exceeded",
+                    message: "The API key has insufficient credits or has reached its quota. Even for new accounts, OpenAI requires a minimum prepaid balance (usually $5) to activate the API. Please check your billing dashboard: https://platform.openai.com/settings/organization/billing",
+                    request_id: errObj.request_id || "unknown"
+                },
+                { status: 402 } // Payment Required / Quota Exceeded
+            );
+        }
+
+        if (errObj.status === 401) {
+            return NextResponse.json(
+                {
+                    error: "OpenAI Authentication Failed",
+                    message: "The API key in .env.local is either invalid or lacks the necessary permissions. If using a 'Project API Key', ensure it has 'Read/Write' access to the Chat model in your OpenAI Project settings.",
+                    request_id: errObj.request_id || "unknown"
+                },
+                { status: 401 }
+            );
+        }
 
         // Check if it's an OpenAI API error regarding parsing or similar issue
         if (errObj.name === 'LengthFinishReasonError' || errObj.status === 402 || errObj.status === 400 || errObj.message?.includes('parse')) {
@@ -92,7 +123,11 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json(
-            { error: "Internal Server Error", message: errObj.message },
+            {
+                error: "Internal Server Error",
+                message: errObj.message || "An unexpected error occurred during note analysis.",
+                code: errObj.code
+            },
             { status: 500 }
         );
     }
