@@ -68,64 +68,72 @@ export async function POST(req: Request) {
 
         console.log(`[NoteExtract API] Processing note of length: ${note.length}`);
 
-        // Initialize the Braintrust logger and wrap the OpenAI client per documentation
+        // Initialize the Braintrust logger
         const logger = initLogger({
             projectName: "careflow-copilot",
             apiKey: process.env.BRAINTRUST_API_KEY,
         });
 
-        // wrapOpenAI() automatically captures all AI calls as traces
-        const client = wrapOpenAI(
-            new OpenAI({
-                apiKey: process.env.OPENAI_API_KEY,
-            }),
+        // Use logger.traced() to create a proper span context.
+        // wrapOpenAI creates child spans for OpenAI calls, so all logging
+        // must happen inside a traced span — not at the top level.
+        const response = await logger.traced(
+            async (span) => {
+                // wrapOpenAI() automatically captures all AI calls as child spans
+                const client = wrapOpenAI(
+                    new OpenAI({
+                        apiKey: process.env.OPENAI_API_KEY,
+                    }),
+                );
+
+                let completion;
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((client as any).chat?.completions?.parse) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    completion = await (client as any).chat.completions.parse({
+                        model: "gpt-4o-mini",
+                        messages: [
+                            { role: "system", content: buildSystemPrompt() },
+                            { role: "user", content: buildUserPrompt(note) },
+                        ],
+                        response_format: zodResponseFormat(NoteExtractSchema, "note_extract"),
+                        temperature: 0.2,
+                        store: false,
+                    });
+                } else {
+                    throw new Error("OpenAI SDK version does not support structured output '.parse()' helper.");
+                }
+
+                const result = completion.choices[0].message.parsed;
+                if (!result) {
+                    throw new Error("Failed to parse the response structure from OpenAI.");
+                }
+
+                // Log within the span context (not at top level)
+                span.log({
+                    input: "Redacted note for extraction",
+                    output: "Schema populated successfully",
+                    metadata: {
+                        prompt_version: PROMPT_VERSION,
+                        note_length_chars: note.length,
+                        model: completion.model || "gpt-4o-mini",
+                        red_flags_count: result.redFlags.length,
+                        success: true,
+                        latency_ms: Date.now() - startTime,
+                    },
+                });
+
+                return NextResponse.json({
+                    prompt_version: PROMPT_VERSION,
+                    model: completion.model || "gpt-4o-mini",
+                    result: result,
+                });
+            },
+            { name: "note-extract" },
         );
 
-        let completion;
-
-        // Try paths commonly used for Structured Outputs
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((client as any).chat?.completions?.parse) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            completion = await (client as any).chat.completions.parse({
-                model: "gpt-4o-mini",
-                messages: [
-                    { role: "system", content: buildSystemPrompt() },
-                    { role: "user", content: buildUserPrompt(note) },
-                ],
-                response_format: zodResponseFormat(NoteExtractSchema, "note_extract"),
-                temperature: 0.2,
-                store: false,
-            });
-        } else {
-            throw new Error("OpenAI SDK version does not support structured output '.parse()' helper.");
-        }
-
-        const result = completion.choices[0].message.parsed;
-        if (!result) {
-            throw new Error("Failed to parse the response structure from OpenAI.");
-        }
-
-        // You can also use logger.log() for custom traces (e.g., multimodal inputs, metadata)
-        // We omit raw note content to preserve PHI safety bounds
-        logger.log({
-            input: "Redacted note for extraction",
-            output: "Schema populated successfully",
-            metadata: {
-                prompt_version: PROMPT_VERSION,
-                note_length_chars: note.length,
-                model: completion.model || "gpt-4o-mini",
-                red_flags_count: result.redFlags.length,
-                success: true,
-                latency_ms: Date.now() - startTime,
-            },
-        });
-
-        return NextResponse.json({
-            prompt_version: PROMPT_VERSION,
-            model: completion.model || "gpt-4o-mini",
-            result: result,
-        });
+        return response;
     } catch (error: unknown) {
         const errObj = error as {
             name?: string,
@@ -136,19 +144,28 @@ export async function POST(req: Request) {
             type?: string
         };
 
-        // If it failed, log the error failure to braintrust too
-        const logger = initLogger({
-            projectName: "careflow-copilot",
-            apiKey: process.env.BRAINTRUST_API_KEY,
-        });
-        logger.log({
-            input: "Failed note extraction",
-            output: errObj.message || "Unknown error",
-            metadata: {
-                success: false,
-                latency_ms: Date.now() - startTime,
-            }
-        });
+        // Log the failure to Braintrust inside a traced span
+        try {
+            const logger = initLogger({
+                projectName: "careflow-copilot",
+                apiKey: process.env.BRAINTRUST_API_KEY,
+            });
+            await logger.traced(
+                async (span) => {
+                    span.log({
+                        input: "Failed note extraction",
+                        output: errObj.message || "Unknown error",
+                        metadata: {
+                            success: false,
+                            latency_ms: Date.now() - startTime,
+                        },
+                    });
+                },
+                { name: "note-extract-error" },
+            );
+        } catch (logErr) {
+            console.error("[NoteExtract API] Failed to log error to Braintrust:", logErr);
+        }
 
         console.error("[NoteExtract API] Error:", errObj);
 
